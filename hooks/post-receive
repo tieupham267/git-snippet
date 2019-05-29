@@ -1,0 +1,36 @@
+#!/bin/bash
+
+WORKTREE=/usr/share/nginx/html
+GITDIR=/home/git/proj
+LOGFILE=log.txt
+
+#while read oldrev newrev ref
+#do
+#    if [[ $ref =~ .*/master$ ]];
+#    then
+#        echo "Master ref received.  Deploying master branch to production..."
+#        git --work-tree=$WORKTREE --git-dir=$GITDIR checkout -f
+#    else
+#        echo "Ref $ref successfully received.  Doing nothing: only the master branch may be deployed on this server."
+#    fi
+#done
+
+echo "--- Log writer ---" >> $LOGFILE
+echo "--- BEGIN ---" >> $LOGFILE
+echo "Start date: " >> $LOGFILE
+
+while read oldrev newrev ref
+do
+    # When git receives a push, 
+	# the post-receive hook is invoked and passed data on stdin about each ref that was delivered,
+	# in rows of <old-sha> <new-sha> <ref-name>, like so:
+	# e1f5c274e296f1c5148161f9d4e5eb43a6743e54 1eea3f51cf926c3710f8fa4a06f503041c4597f0 refs/heads/master
+    # Set branch
+    #branch=$(git rev-parse --symbolic --abbrev-ref $ref)
+    branch=$(echo "$ref" | cut -d/ -f3)
+    echo "Branch is at $branch" >> $LOGFILE
+    git --work-tree=$WORKTREE --git-dir=$GITDIR checkout -f "$branch"
+done
+
+echo "End date: " >> $LOGFILE
+echo "--- END ---" >> $LOGFILE
